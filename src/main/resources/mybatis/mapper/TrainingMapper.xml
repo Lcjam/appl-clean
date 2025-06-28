@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="junesoft.appl.mapper.TrainingMapper">
+
+  <!-- 공통 컬럼 정의 -->
+  <sql id="trainingColumns">
+    a.training_seq, a.ipms_training_seq, a.ipms_training_code, a.ipms_training_session,
+    a.kipa_id, a.user_name, a.org_type_code, a.org_type_etc_txt, a.course_code, a.school_code,
+    a.school_system_code, a.edu_office_cd, a.local_edu_office_name, a.found_type_code,
+    a.dispatch_flag, a.dispatch_org_name, a.position, a.gender_code, a.birth_date,
+    a.nice_pin, a.user_mobile, a.user_email, a.apply_status_code, a.apply_time,
+    a.first_exam_code, a.first_exam_fail_desc, a.training_desc, a.finish_desc,
+    a.finish_prefix_desc, a.finish_seq, a.finish_done_date, a.zipcode, a.addr1, a.addr2,
+    a.write_time, a.modify_time, a.del_flag
+  </sql>
+  
+  <!-- 공통 JOIN 구문 정의 -->
+  <sql id="codeJoins">
+    LEFT JOIN
+      TB25_991_CODE c1 ON c1.code_type = <!-- CodeConstants.EDU_ORG_CODE --> 'EDU_ORG_CODE' AND a.org_type_code = c1.code
+    LEFT JOIN
+      TB25_991_CODE c2 ON c2.code_type = <!-- CodeConstants.SCHOOL_SYSTEM_CODE --> 'SCHOOL_SYSTEM_CODE' AND a.school_system_code = c2.code
+    LEFT JOIN
+      TB25_991_CODE c3 ON c3.code_type = <!-- CodeConstants.EDU_OFFICE_CODE --> 'DOCTOR_SCHOOL_CODE' AND a.edu_office_cd = c3.code
+    LEFT JOIN
+      TB25_991_CODE c4 ON c4.code_type = <!-- CodeConstants.SCHOOL_FOUND_CODE --> 'SCHOOL_FOUND_CODE' AND a.found_type_code = c4.code
+    LEFT JOIN
+      TB25_991_CODE c5 ON c5.code_type = <!-- CodeConstants.GENDER_CODE --> 'GENDER_CODE' AND a.gender_code = c5.code
+    LEFT JOIN
+      TB25_991_CODE c6 ON c6.code_type = <!-- CodeConstants.APPLY_STATUS_CODE --> 'APPLY_STATUS_CODE' AND a.apply_status_code = c6.code
+  </sql>
+  
+  <!-- 모든 연수 신청 목록 조회 -->
+  <select id="selectAllTrainings" resultType="TrainingApplDTO">
+    SELECT
+      <include refid="trainingColumns" />,
+      c1.code_name as org_type_name,
+      c2.code_name as school_system_name,
+      c3.code_name as edu_office_name,
+      c4.code_name as found_type_name,
+      c5.code_name as gender_name,
+      c6.code_name as apply_status_name,
+      a.edu_office_cd as eduOfficeCode
+    FROM
+      temp_training_data a
+    <include refid="codeJoins" />
+    WHERE
+      a.del_flag = 'N'
+    ORDER BY
+      a.training_seq DESC
+  </select>
+  
+  <!-- 특정 연수 신청 상세 조회 -->
+  <select id="selectTrainingById" resultType="TrainingApplDTO">
+    SELECT
+      <include refid="trainingColumns" />,
+      c1.code_name as org_type_name,
+      c2.code_name as school_system_name,
+      c3.code_name as edu_office_name,
+      c4.code_name as found_type_name,
+      c5.code_name as gender_name,
+      c6.code_name as apply_status_name,
+      a.edu_office_cd as eduOfficeCode
+    FROM
+      temp_training_data a
+    <include refid="codeJoins" />
+    WHERE
+      a.training_seq = #{trainingSeq}
+      AND a.del_flag = 'N'
+  </select>
+  
+  <!-- 페이징된 연수 신청 목록 조회 -->
+  <select id="selectTrainingsWithPaging" resultType="TrainingApplDTO">
+    SELECT
+      <include refid="trainingColumns" />,
+      c1.code_name as org_type_name,
+      c2.code_name as school_system_name,
+      c3.code_name as edu_office_name,
+      c4.code_name as found_type_name,
+      c5.code_name as gender_name,
+      c6.code_name as apply_status_name,
+      a.edu_office_cd as eduOfficeCode
+    FROM
+      temp_training_data a
+    <include refid="codeJoins" />
+    WHERE
+      a.del_flag = 'N'
+    ORDER BY
+      a.training_seq DESC
+    LIMIT #{offset}, #{pageSize}
+  </select>
+  
+  <!-- 전체 연수 신청 건수 조회 -->
+  <select id="countTotalTrainings" resultType="int">
+    SELECT
+      COUNT(*)
+    FROM
+      temp_training_data a
+    WHERE
+      a.del_flag = 'N'
+  </select>
+
+  <insert id="insertTraining" parameterType="junesoft.appl.dto.TrainingApplDTO">
+    INSERT INTO temp_training_data (
+      ipms_training_seq,
+      ipms_training_code,
+      ipms_training_session,
+      kipa_id,
+      user_name,
+      org_type_code,
+      org_type_etc_txt,
+      course_code,
+      school_code,
+      school_system_code,
+      edu_office_cd,
+      local_edu_office_name,
+      found_type_code,
+      dispatch_flag,
+      dispatch_org_name,
+      position,
+      gender_code,
+      birth_date,
+      nice_pin,
+      user_mobile,
+      user_email,
+      apply_status_code,
+      apply_time,
+      write_time,
+      modify_time,
+      del_flag
+    ) VALUES (
+      #{ipmsTrainingSeq},
+      #{ipmsTrainingCode},
+      #{ipmsTrainingSession},
+      #{kipaId},
+      #{userName},
+      #{orgTypeCode},
+      #{orgTypeEtcTxt},
+      #{courseCode},
+      #{schoolCode},
+      #{schoolSystemCode},
+      #{eduOfficeCode},
+      #{localEduOfficeName},
+      #{foundTypeCode},
+      #{dispatchFlag},
+      #{dispatchOrgName},
+      #{position},
+      #{genderCode},
+      #{birthDate},
+      #{nicePin},
+      #{mobile},
+      #{email},
+      #{applyStatusCode},
+      #{applyTime},
+      #{writeTime},
+      #{modifyTime},
+      #{delFlag}
+    )
+  </insert>
+
+</mapper> 
